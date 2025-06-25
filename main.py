@@ -1,35 +1,65 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from llama_stack import LlamaClient
+from llama_stack_client import LlamaStackClient
+import os
+import httpx
+import asyncio
+from fastapi.responses import StreamingResponse
+import json
+import asyncio
+import anyio
+import threading
+import queue
 
 app = FastAPI(title="Canopy Backend API")
-llama_client = LlamaClient()
+
+base_url = os.getenv("LLAMA_BASE_URL", "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com")
+summary_model = os.getenv("SUMMARY_MODEL", "llama32-quantized")
+llama_client = LlamaStackClient(base_url=base_url)
 
 class PromptRequest(BaseModel):
     prompt: str
-    max_tokens: Optional[int] = 100
-    temperature: Optional[float] = 0.7
 
-class PromptResponse(BaseModel):
-    response: str
-    tokens_used: Optional[int]
+@app.post("/summarize")
+async def summarize(request: PromptRequest):
+    prompt_url = "https://raw.githubusercontent.com/rhoai-genaiops/canopy-prompts/main/Summary/Llama3.2-3b/prompts.txt"
+    
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(prompt_url)
+        resp.raise_for_status()
+        sys_prompt = resp.text
 
-@app.post("/generate", response_model=PromptResponse)
-async def generate_response(request: PromptRequest):
-    try:
-        response = await llama_client.generate(
-            prompt=request.prompt,
-            max_tokens=request.max_tokens,
-            temperature=request.temperature
-        )
-        
-        return PromptResponse(
-            response=response.text,
-            tokens_used=response.usage.total_tokens if hasattr(response, 'usage') else None
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    q = queue.Queue()
+
+    def worker():
+        try:
+            response = llama_client.inference.chat_completion(
+                model_id=summary_model,
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": request.prompt},
+                ],
+                sampling_params={"max_tokens": 4096, "temperature": 0.7},
+                stream=True,
+            )
+            for r in response:
+                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
+                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                    q.put(chunk)
+        except Exception as e:
+            q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
+
+    threading.Thread(target=worker).start()
+
+    async def streamer():
+        while True:
+            chunk = await asyncio.get_event_loop().run_in_executor(None, q.get)
+            if chunk is None:
+                break
+            yield chunk
+
+    return StreamingResponse(streamer(), media_type="text/event-stream")
 
 if __name__ == "__main__":
     import uvicorn

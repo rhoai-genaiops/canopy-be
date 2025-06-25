@@ -1,5 +1,5 @@
-fastapi>=0.70.0
-uvicorn>=0.15.0
-pydantic>=1.8.2
-llama-stack
-python-dotenv>=0.19.1
+fastapi==0.115.13
+uvicorn==0.34.3
+pydantic==2.11.7
+llama-stack-client==0.2.12
+python-dotenv==1.1.1
