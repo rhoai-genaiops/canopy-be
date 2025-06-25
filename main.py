@@ -14,15 +14,17 @@ import queue
 
 app = FastAPI(title="Canopy Backend API")
 
-base_url = os.getenv("LLAMA_BASE_URL", "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com")
-summary_model = os.getenv("SUMMARY_MODEL", "llama32-quantized")
-llama_client = LlamaStackClient(base_url=base_url)
+LLAMASTACK_BASE_URL = os.getenv("LLAMA_BASE_URL", "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com")
+CLOUD_LLM = os.getenv("CLOUD_LLM", "llama32-quantized")
+PRIVATE_LLM = os.getenv("PRIVATE_LLM", "llama32-quantized")
+llama_client = LlamaStackClient(base_url=LLAMASTACK_BASE_URL)
 
 class PromptRequest(BaseModel):
     prompt: str
 
 @app.post("/summarize")
 async def summarize(request: PromptRequest):
+    # Fetching the system prompt from the remote URL, so that it will always be up-to-date
     prompt_url = "https://raw.githubusercontent.com/rhoai-genaiops/canopy-prompts/main/Summary/Llama3.2-3b/prompts.txt"
     
     async with httpx.AsyncClient() as client:
@@ -35,7 +37,7 @@ async def summarize(request: PromptRequest):
     def worker():
         try:
             response = llama_client.inference.chat_completion(
-                model_id=summary_model,
+                model_id=CLOUD_LLM,
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": request.prompt},
