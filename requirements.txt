@@ -1,0 +1,5 @@
+fastapi>=0.70.0
+uvicorn>=0.15.0
+pydantic>=1.8.2
+llama-stack
+python-dotenv>=0.19.1
