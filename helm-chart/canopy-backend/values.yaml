@@ -1,1 +1,1 @@
-image: canopy-backend:latest
+image: quay.io/rlundber/canopy-be:0.3
