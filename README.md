@@ -2,10 +2,11 @@
 
 FastAPI backend service that uses Llamastack to interact with language models.
 
-## Setup
+## Local Development
 
 1. Install dependencies:
 ```bash
+cd app
 pip install -r requirements.txt
 ```
 
@@ -16,31 +17,38 @@ python main.py
 
 The server will start on `http://localhost:8000`
 
+## Container Build
+
+Build the container image:
+```bash
+cd app
+podman build -t canopy-backend .
+```
+
+## OpenShift Deployment
+
+Deploy using Helm:
+```bash
+helm install canopy-backend ./helm-chart/canopy-backend
+```
+
 ## API Endpoints
 
-### POST /generate
+### POST /summarize
 
-Generate text using the language model.
+Summarize text using the language model with streaming response.
 
 Request body:
 ```json
 {
-    "prompt": "Your prompt here",
-    "max_tokens": 100,
-    "temperature": 0.7
+    "prompt": "Your text to summarize here"
 }
 ```
 
-Response:
-```json
-{
-    "response": "Generated text response",
-    "tokens_used": 42
-}
-```
+Response: Server-sent events stream with delta chunks
 
 ## API Documentation
 
-Once the server is running, you can access:
+Once the server is running, access:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`

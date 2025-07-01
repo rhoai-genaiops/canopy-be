@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canopy-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canopy-backend
+  template:
+    metadata:
+      labels:
+        app: canopy-backend
+    spec:
+      containers:
+        - name: canopy-backend
+          image: {{ .Values.image }}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: LLAMA_BASE_URL
+              value: "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com"
+            - name: CLOUD_LLM
+              value: "llama32"
+            - name: PRIVATE_LLM
+              value: "llama32"

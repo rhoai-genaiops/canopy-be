@@ -24,13 +24,7 @@ class PromptRequest(BaseModel):
 
 @app.post("/summarize")
 async def summarize(request: PromptRequest):
-    # Fetching the system prompt from the remote URL, so that it will always be up-to-date
-    prompt_url = "https://raw.githubusercontent.com/rhoai-genaiops/canopy-prompts/main/Summary/Llama3.2-3b/prompts.txt"
-    
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(prompt_url)
-        resp.raise_for_status()
-        sys_prompt = resp.text
+    sys_prompt = "Give me a good summary of the following text."
 
     q = queue.Queue()
 
