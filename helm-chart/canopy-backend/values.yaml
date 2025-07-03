@@ -1,1 +1,9 @@
-image: quay.io/rlundber/canopy-be:0.3
+image: quay.io/rhoai-genaiops/canopy-be:0.1
+
+env:
+  llamaBaseUrl: "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com"
+  cloudLlm: "llama32"
+  privateLlm: "llama32"
+  featureFlags:
+    ragEnabled: "false"
+    summarizationEnabled: "true"

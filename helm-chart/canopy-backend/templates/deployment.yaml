@@ -19,8 +19,12 @@ spec:
             - containerPort: 8000
           env:
             - name: LLAMA_BASE_URL
-              value: "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com"
+              value: "{{ .Values.env.llamaBaseUrl }}"
             - name: CLOUD_LLM
-              value: "llama32"
+              value: "{{ .Values.env.cloudLlm }}"
             - name: PRIVATE_LLM
-              value: "llama32"
+              value: "{{ .Values.env.privateLlm }}"
+            - name: FEATURE_RAG_ENABLED
+              value: "{{ .Values.env.featureFlags.ragEnabled }}"
+            - name: FEATURE_SUMMARIZATION_ENABLED
+              value: "{{ .Values.env.featureFlags.summarizationEnabled }}"
