@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Canopy Backend Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Canopy Backend Helm chart",
+  "properties": {
+    "LLAMA_STACK_URL": {
+      "type": "string",
+      "description": "Base URL for the LLaMA Stack service",
+      "pattern": "^https?://[^\\s]+$",
+      "examples": [
+        "http://llama-stack",
+        "http://llama-stack:8000",
+        "https://my-llama-service.example.com"
+      ]
+    },
+    "summarize": {
+      "type": "object",
+      "description": "Configuration for summarization functionality",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable summarization functionality",
+          "default": false
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier to use for summarization",
+          "minLength": 1,
+          "examples": [
+            "llama32",
+            "llama3.2",
+            "gpt-4"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt template for summarization requests",
+          "minLength": 1
+        }
+      },
+      "required": ["enabled", "model", "prompt"],
+      "additionalProperties": false
+    },
+    "RAG": {
+      "type": "object",
+      "description": "Configuration for RAG (Retrieval-Augmented Generation) functionality",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable RAG functionality",
+          "default": false
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier to use for RAG",
+          "minLength": 1,
+          "examples": [
+            "llama32",
+            "llama3.2",
+            "gpt-4"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt template for RAG requests",
+          "minLength": 1
+        }
+      },
+      "required": ["enabled", "model", "prompt"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["LLAMA_STACK_URL", "summarize", "RAG"],
+  "additionalProperties": false
+}

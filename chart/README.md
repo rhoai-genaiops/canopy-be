@@ -38,30 +38,32 @@ The following table lists the configurable parameters of the Canopy Backend char
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | Container image for the backend | `quay.io/rhoai-genaiops/canopy-be:0.1` |
-| `LLAMA_STACK_URL` | Base URL for the LLaMA Stack service | `http://llama32:8000` |
-| `CLOUD_LLM` | Cloud LLM service identifier | `llama32` |
-| `PRIVATE_LLM` | Private LLM service identifier | `llama32` |
-| `featureFlags.ragEnabled` | Enable RAG functionality | `false` |
-| `featureFlags.summarizationEnabled` | Enable summarization functionality | `true` |
+| `LLAMA_STACK_URL` | Base URL for the LLaMA Stack service | `http://llama-stack` |
+| `summarize.enabled` | Enable summarization functionality | `false` |
+| `summarize.model` | Model to use for summarization | `llama32` |
+| `summarize.prompt` | Prompt template for summarization | `Give me a good summary of the following text.` |
+| `RAG.enabled` | Enable RAG functionality | `false` |
+| `RAG.model` | Model to use for RAG | `llama32` |
+| `RAG.prompt` | Prompt template for RAG | `You are a helpful assistant that answers questions based on the provided context. Use only the information from the context to answer.` |
 
-## Environment Variables
+## Values Structure
+
+The chart uses a structured values file that gets mounted as a ConfigMap. The entire values structure is available to the application as a configuration file at `/canopy/canopy-config.yaml`.
+
+### Environment Variables
 
 The application uses the following environment variables:
 
-- `LLAMA_STACK_URL`: Base URL for the LLaMA Stack service
-- `CLOUD_LLM`: Cloud LLM service identifier
-- `PRIVATE_LLM`: Private LLM service identifier
-- `FEATURE_RAG_ENABLED`: Enable/disable RAG functionality
-- `FEATURE_SUMMARIZATION_ENABLED`: Enable/disable summarization functionality
+- `LLAMA_BASE_URL`: Base URL for the LLaMA Stack service (sourced from `LLAMA_STACK_URL`)
 
 ## Resources Created
 
 This chart creates the following Kubernetes resources:
 
-- **Deployment**: Main application deployment with configurable replicas
+- **Deployment**: Main application deployment with single replica
 - **Service**: ClusterIP service exposing port 8000
-- **Route**: OpenShift route with TLS edge termination for external access
+- **Route**: OpenShift route for external access
+- **ConfigMap**: Contains the entire values structure as `canopy-config.yaml`
 
 ## Examples
 
@@ -75,14 +77,21 @@ helm install canopy-backend ./chart
 
 ```yaml
 # custom-values.yaml
-image: quay.io/rhoai-genaiops/canopy-be:0.2
-
 LLAMA_STACK_URL: "http://my-llama-service:8000"
-CLOUD_LLM: "gpt-4"
-PRIVATE_LLM: "llama-7b"
-featureFlags:
-  ragEnabled: "true"
-  summarizationEnabled: "true"
+
+summarize:
+  enabled: true
+  model: "llama3.2"
+  prompt: |
+    Provide a comprehensive summary of the following text,
+    highlighting key points and main themes.
+
+RAG:
+  enabled: true
+  model: "llama3.2"
+  prompt: |
+    Answer the following question based on the provided context.
+    If the context doesn't contain relevant information, say so.
 ```
 
 ```bash
