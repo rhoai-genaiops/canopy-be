@@ -17,17 +17,20 @@ spec:
     spec:
       containers:
         - name: canopy-backend
-          image: {{ .Values.image }}
+          image: quay.io/rhoai-genaiops/canopy-be:0.1
           ports:
             - containerPort: 8000
           env:
             - name: LLAMA_BASE_URL
               value: "{{ .Values.LLAMA_STACK_URL }}"
-            - name: CLOUD_LLM
-              value: "{{ .Values.CLOUD_LLM }}"
-            - name: PRIVATE_LLM
-              value: "{{ .Values.PRIVATE_LLM }}"
-            - name: FEATURE_RAG_ENABLED
-              value: "{{ .Values.featureFlags.ragEnabled }}"
-            - name: FEATURE_SUMMARIZATION_ENABLED
-              value: "{{ .Values.featureFlags.summarizationEnabled }}"
+          volumeMounts:
+            - mountPath: /canopy
+              name: canopy-config
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: canopy-config.yaml
+              path: canopy-config.yaml
+            name: canopy-config
+          name: canopy-config
