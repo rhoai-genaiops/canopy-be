@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Canopy Backend Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml for the Canopy Backend Helm chart",
+  "properties": {
+    "image": {
+      "type": "string",
+      "description": "Container image for the Canopy Backend application",
+      "pattern": "^[a-zA-Z0-9._/-]+:[a-zA-Z0-9._-]+$",
+      "examples": ["quay.io/rhoai-genaiops/canopy-be:0.1"]
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment configuration for the application",
+      "properties": {
+        "llamaBaseUrl": {
+          "type": "string",
+          "description": "Base URL for the LLaMA service",
+          "format": "uri",
+          "examples": ["http://llama32:8000"]
+        },
+        "cloudLlm": {
+          "type": "string",
+          "description": "Cloud LLM service identifier",
+          "minLength": 1,
+          "examples": ["llama32", "gpt-4"]
+        },
+        "privateLlm": {
+          "type": "string",
+          "description": "Private LLM service identifier",
+          "minLength": 1,
+          "examples": ["llama32", "llama-7b"]
+        },
+        "featureFlags": {
+          "type": "object",
+          "description": "Feature flags for enabling/disabling application features",
+          "properties": {
+            "ragEnabled": {
+              "type": "string",
+              "description": "Enable RAG (Retrieval-Augmented Generation) functionality",
+              "enum": ["true", "false"],
+              "default": "false"
+            },
+            "summarizationEnabled": {
+              "type": "string",
+              "description": "Enable summarization functionality",
+              "enum": ["true", "false"],
+              "default": "true"
+            }
+          },
+          "required": ["ragEnabled", "summarizationEnabled"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["llamaBaseUrl", "cloudLlm", "privateLlm", "featureFlags"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["image", "env"],
+  "additionalProperties": false
+}
