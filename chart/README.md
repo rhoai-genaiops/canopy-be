@@ -105,3 +105,5 @@ helm uninstall canopy-backend
 ## Support
 
 For issues and questions, please refer to the project documentation or open an issue in the project repository.
+
+Helm chart icon is from [here](https://www.deviantart.com/pratlegacy/art/Cute-Groot-Digital-Art-Vector-Icon-762435201)
