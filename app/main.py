@@ -3,25 +3,26 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from llama_stack_client import LlamaStackClient
 import os
-import httpx
 import asyncio
 from fastapi.responses import StreamingResponse
 import json
-import anyio
 import threading
 import queue
+import yaml
 
 app = FastAPI(title="Canopy Backend API")
 
-LLAMASTACK_BASE_URL = os.getenv("LLAMA_BASE_URL", "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com")
-CLOUD_LLM = os.getenv("CLOUD_LLM", "llama32-quantized")
-PRIVATE_LLM = os.getenv("PRIVATE_LLM", "llama32-quantized")
-llama_client = LlamaStackClient(base_url=LLAMASTACK_BASE_URL)
+# config_path = "/canopy/canopy-config.yaml"
+config_path = "config-test.yaml"
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+
+llama_client = LlamaStackClient(base_url=config["LLAMA_STACK_URL"])
 
 # Feature flags configuration from environment variables
 FEATURE_FLAGS = {
-    "rag-feature": os.getenv("FEATURE_RAG_ENABLED", "false").lower() == "true",
-    "summarization": os.getenv("FEATURE_SUMMARIZATION_ENABLED", "true").lower() == "true",
+    "RAG": "RAG" in config and config["RAG"]["enabled"] == True,
+    "summarize": "summarize" in config and config["summarize"]["enabled"] == True,
 }
 
 class PromptRequest(BaseModel):
@@ -35,17 +36,18 @@ async def get_feature_flags() -> Dict[str, Any]:
 @app.post("/summarize")
 async def summarize(request: PromptRequest):
     # Check if summarization feature is enabled
-    if not FEATURE_FLAGS.get("summarization", False):
+    if not FEATURE_FLAGS.get("summarize", False):
         raise HTTPException(status_code=404, detail="Summarization feature is not enabled")
     
-    sys_prompt = "Give me a good summary of the following text."
+    sys_prompt = config["summarize"]["prompt"]
 
     q = queue.Queue()
 
     def worker():
+        print(f"sending requestion to model {config['summarize']['model']}")
         try:
             response = llama_client.inference.chat_completion(
-                model_id=CLOUD_LLM,
+                model_id=config["summarize"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": request.prompt},
@@ -74,18 +76,18 @@ async def summarize(request: PromptRequest):
 @app.post("/rag")
 async def rag(request: PromptRequest):
     # Check if RAG feature is enabled
-    if not FEATURE_FLAGS.get("rag-feature", False):
+    if not FEATURE_FLAGS.get("RAG", False):
         raise HTTPException(status_code=404, detail="RAG feature is not enabled")
     
     # Dummy RAG implementation
-    sys_prompt = "You are a helpful assistant that provides answers based on retrieved context."
-    
+    sys_prompt = config["RAG"]["prompt"]
+
     q = queue.Queue()
 
     def worker():
         try:
             response = llama_client.inference.chat_completion(
-                model_id=CLOUD_LLM,
+                model_id=config["RAG"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": f"[RAG Context] Answer this question: {request.prompt}"},

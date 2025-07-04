@@ -1,11 +1,6 @@
 LLAMA_STACK_URL: "http://llama-stack"
 summarize:
-  enabled: false
+  enabled: true
   model: llama32
   prompt: |
     Give me a good summary of the following text.
-RAG:
-  enabled: false
-  model: llama32
-  prompt: |
-    You are a helpful assistant that answers questions based on the provided context. Use only the information from the context to answer.
