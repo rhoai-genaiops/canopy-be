@@ -39,17 +39,17 @@ The following table lists the configurable parameters of the Canopy Backend char
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `image` | Container image for the backend | `quay.io/rhoai-genaiops/canopy-be:0.1` |
-| `env.llamaBaseUrl` | Base URL for the LLaMA service | `http://llama32:8000` |
-| `env.cloudLlm` | Cloud LLM service identifier | `llama32` |
-| `env.privateLlm` | Private LLM service identifier | `llama32` |
-| `env.featureFlags.ragEnabled` | Enable RAG functionality | `false` |
-| `env.featureFlags.summarizationEnabled` | Enable summarization functionality | `true` |
+| `LLAMA_STACK_URL` | Base URL for the LLaMA Stack service | `http://llama32:8000` |
+| `CLOUD_LLM` | Cloud LLM service identifier | `llama32` |
+| `PRIVATE_LLM` | Private LLM service identifier | `llama32` |
+| `featureFlags.ragEnabled` | Enable RAG functionality | `false` |
+| `featureFlags.summarizationEnabled` | Enable summarization functionality | `true` |
 
 ## Environment Variables
 
 The application uses the following environment variables:
 
-- `LLAMA_BASE_URL`: Base URL for the LLaMA service
+- `LLAMA_STACK_URL`: Base URL for the LLaMA Stack service
 - `CLOUD_LLM`: Cloud LLM service identifier
 - `PRIVATE_LLM`: Private LLM service identifier
 - `FEATURE_RAG_ENABLED`: Enable/disable RAG functionality
@@ -77,13 +77,12 @@ helm install canopy-backend ./chart
 # custom-values.yaml
 image: quay.io/rhoai-genaiops/canopy-be:0.2
 
-env:
-  llamaBaseUrl: "http://my-llama-service:8000"
-  cloudLlm: "gpt-4"
-  privateLlm: "llama-7b"
-  featureFlags:
-    ragEnabled: "true"
-    summarizationEnabled: "true"
+LLAMA_STACK_URL: "http://my-llama-service:8000"
+CLOUD_LLM: "gpt-4"
+PRIVATE_LLM: "llama-7b"
+featureFlags:
+  ragEnabled: "true"
+  summarizationEnabled: "true"
 ```
 
 ```bash

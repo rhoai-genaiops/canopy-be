@@ -10,53 +10,45 @@
       "pattern": "^[a-zA-Z0-9._/-]+:[a-zA-Z0-9._-]+$",
       "examples": ["quay.io/rhoai-genaiops/canopy-be:0.1"]
     },
-    "env": {
+    "LLAMA_STACK_URL": {
+      "type": "string",
+      "description": "Base URL for the LLaMA Stack service",
+      "format": "uri",
+      "examples": ["http://llama32:8000"]
+    },
+    "CLOUD_LLM": {
+      "type": "string",
+      "description": "Cloud LLM service identifier",
+      "minLength": 1,
+      "examples": ["llama32", "gpt-4"]
+    },
+    "PRIVATE_LLM": {
+      "type": "string",
+      "description": "Private LLM service identifier",
+      "minLength": 1,
+      "examples": ["llama32", "llama-7b"]
+    },
+    "featureFlags": {
       "type": "object",
-      "description": "Environment configuration for the application",
+      "description": "Feature flags for enabling/disabling application features",
       "properties": {
-        "llamaBaseUrl": {
+        "ragEnabled": {
           "type": "string",
-          "description": "Base URL for the LLaMA service",
-          "format": "uri",
-          "examples": ["http://llama32:8000"]
+          "description": "Enable RAG (Retrieval-Augmented Generation) functionality",
+          "enum": ["true", "false"],
+          "default": "false"
         },
-        "cloudLlm": {
+        "summarizationEnabled": {
           "type": "string",
-          "description": "Cloud LLM service identifier",
-          "minLength": 1,
-          "examples": ["llama32", "gpt-4"]
-        },
-        "privateLlm": {
-          "type": "string",
-          "description": "Private LLM service identifier",
-          "minLength": 1,
-          "examples": ["llama32", "llama-7b"]
-        },
-        "featureFlags": {
-          "type": "object",
-          "description": "Feature flags for enabling/disabling application features",
-          "properties": {
-            "ragEnabled": {
-              "type": "string",
-              "description": "Enable RAG (Retrieval-Augmented Generation) functionality",
-              "enum": ["true", "false"],
-              "default": "false"
-            },
-            "summarizationEnabled": {
-              "type": "string",
-              "description": "Enable summarization functionality",
-              "enum": ["true", "false"],
-              "default": "true"
-            }
-          },
-          "required": ["ragEnabled", "summarizationEnabled"],
-          "additionalProperties": false
+          "description": "Enable summarization functionality",
+          "enum": ["true", "false"],
+          "default": "true"
         }
       },
-      "required": ["llamaBaseUrl", "cloudLlm", "privateLlm", "featureFlags"],
+      "required": ["ragEnabled", "summarizationEnabled"],
       "additionalProperties": false
     }
   },
-  "required": ["image", "env"],
+  "required": ["image", "LLAMA_STACK_URL", "CLOUD_LLM", "PRIVATE_LLM", "featureFlags"],
   "additionalProperties": false
 }

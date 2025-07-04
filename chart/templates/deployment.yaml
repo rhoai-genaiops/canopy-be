@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,12 +20,12 @@ spec:
             - containerPort: 8000
           env:
             - name: LLAMA_BASE_URL
-              value: "{{ .Values.env.llamaBaseUrl }}"
+              value: "{{ .Values.LLAMA_STACK_URL }}"
             - name: CLOUD_LLM
-              value: "{{ .Values.env.cloudLlm }}"
+              value: "{{ .Values.CLOUD_LLM }}"
             - name: PRIVATE_LLM
-              value: "{{ .Values.env.privateLlm }}"
+              value: "{{ .Values.PRIVATE_LLM }}"
             - name: FEATURE_RAG_ENABLED
-              value: "{{ .Values.env.featureFlags.ragEnabled }}"
+              value: "{{ .Values.featureFlags.ragEnabled }}"
             - name: FEATURE_SUMMARIZATION_ENABLED
-              value: "{{ .Values.env.featureFlags.summarizationEnabled }}"
+              value: "{{ .Values.featureFlags.summarizationEnabled }}"

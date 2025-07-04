@@ -1,9 +1,8 @@
 image: quay.io/rhoai-genaiops/canopy-be:0.1
 
-env:
-  llamaBaseUrl: "http://llama32:8000"
-  cloudLlm: "llama32"
-  privateLlm: "llama32"
-  featureFlags:
-    ragEnabled: "false"
-    summarizationEnabled: "true"
+LLAMA_STACK_URL: "http://llama-stack"
+CLOUD_LLM: "llama32"
+PRIVATE_LLM: "llama32"
+featureFlags:
+  ragEnabled: "false"
+  summarizationEnabled: "true"
