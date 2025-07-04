@@ -12,8 +12,7 @@ import yaml
 
 app = FastAPI(title="Canopy Backend API")
 
-# config_path = "/canopy/canopy-config.yaml"
-config_path = "config-test.yaml"
+config_path = "/canopy/canopy-config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 
