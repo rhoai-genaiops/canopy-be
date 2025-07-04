@@ -41,36 +41,8 @@
       },
       "required": ["enabled", "model", "prompt"],
       "additionalProperties": false
-    },
-    "RAG": {
-      "type": "object",
-      "description": "Configuration for RAG (Retrieval-Augmented Generation) functionality",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable or disable RAG functionality",
-          "default": false
-        },
-        "model": {
-          "type": "string",
-          "description": "Model identifier to use for RAG",
-          "minLength": 1,
-          "examples": [
-            "llama32",
-            "llama3.2",
-            "gpt-4"
-          ]
-        },
-        "prompt": {
-          "type": "string",
-          "description": "Prompt template for RAG requests",
-          "minLength": 1
-        }
-      },
-      "required": ["enabled", "model", "prompt"],
-      "additionalProperties": false
     }
   },
-  "required": ["LLAMA_STACK_URL", "summarize", "RAG"],
+  "required": ["LLAMA_STACK_URL", "summarize"],
   "additionalProperties": false
 }
