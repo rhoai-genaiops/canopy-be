@@ -60,6 +60,8 @@ async def summarize(request: PromptRequest):
                     q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
+        finally:
+            q.put(None)
 
     threading.Thread(target=worker).start()
 
