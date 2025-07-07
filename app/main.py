@@ -37,8 +37,10 @@ async def summarize(request: PromptRequest):
     # Check if summarization feature is enabled
     if not FEATURE_FLAGS.get("summarize", False):
         raise HTTPException(status_code=404, detail="Summarization feature is not enabled")
-    
-    sys_prompt = config["summarize"]["prompt"]
+
+    sys_prompt = config["summarize"].get("prompt", "Summarize the following text:")
+    temperature = config["summarize"].get("temperature", 0.7)
+    max_tokens = config["summarize"].get("max_tokens", 4096)
 
     q = queue.Queue()
 
@@ -51,7 +53,7 @@ async def summarize(request: PromptRequest):
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": request.prompt},
                 ],
-                sampling_params={"max_tokens": 4096, "temperature": 0.7},
+                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
                 stream=True,
             )
             for r in response:
