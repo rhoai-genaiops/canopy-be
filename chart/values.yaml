@@ -4,3 +4,8 @@ summarize:
   model: llama32
   prompt: |
     Give me a good summary of the following text.
+information-search:
+  enabled: false
+  model: llama32
+  prompt: |
+    You are a helpful assistant specializing in document intelligence and academic content analysis.

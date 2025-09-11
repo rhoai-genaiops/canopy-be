@@ -20,7 +20,7 @@ llama_client = LlamaStackClient(base_url=config["LLAMA_STACK_URL"])
 
 # Feature flags configuration from environment variables
 FEATURE_FLAGS = {
-    "RAG": "RAG" in config and config["RAG"]["enabled"] == True,
+    "information-search": "information-search" in config and config["information-search"]["enabled"] == True,
     "summarize": "summarize" in config and config["summarize"]["enabled"] == True,
 }
 
@@ -76,26 +76,48 @@ async def summarize(request: PromptRequest):
 
     return StreamingResponse(streamer(), media_type="text/event-stream")
 
-@app.post("/rag")
-async def rag(request: PromptRequest):
-    # Check if RAG feature is enabled
-    if not FEATURE_FLAGS.get("RAG", False):
-        raise HTTPException(status_code=404, detail="RAG feature is not enabled")
-    
-    # Dummy RAG implementation
-    sys_prompt = config["RAG"]["prompt"]
+@app.post("/information-search")
+async def information_search(request: PromptRequest):
+    # Check if information search feature is enabled
+    if not FEATURE_FLAGS.get("information-search", False):
+        raise HTTPException(status_code=404, detail="Information search feature is not enabled")
+
+    # Dummy information search implementation
+    sys_prompt = config["information-search"]["prompt"]
+    temperature = config["information-search"].get("temperature", 0.7)
+    max_tokens = config["information-search"].get("max_tokens", 4096)
 
     q = queue.Queue()
+
+    vector_db_id = "docling_vector_db_genaiops" # Hardcoded as we always will use this collection for this usecase
+    rag_response = llama_client.tool_runtime.rag_tool.query(
+        content=request.prompt,                               # User's question
+        vector_db_ids=[vector_db_id],               # Document intelligence database
+        query_config={                              # Format retrieved results
+            "chunk_template": "Result {index}\\nContent: {chunk.content}\\nMetadata: {metadata}\\n",
+        },
+    )
+    prompt_context = rag_response.content
+
+    enhaned_prompt = f"""Please answer the given query using the document intelligence context below.
+
+    CONTEXT (Processed with Docling Document Intelligence):
+    {prompt_context}
+
+    QUERY:
+    {request.prompt}
+
+    Note: The context includes intelligently processed content with preserved tables, formulas, figures, and document structure."""
 
     def worker():
         try:
             response = llama_client.inference.chat_completion(
-                model_id=config["RAG"]["model"],
+                model_id=config["information-search"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
-                    {"role": "user", "content": f"[RAG Context] Answer this question: {request.prompt}"},
+                    {"role": "user", "content": enhaned_prompt},
                 ],
-                sampling_params={"max_tokens": 4096, "temperature": 0.7},
+                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
                 stream=True,
             )
             for r in response:
@@ -104,6 +126,8 @@ async def rag(request: PromptRequest):
                     q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
+        finally:
+            q.put(None)
 
     threading.Thread(target=worker).start()
 

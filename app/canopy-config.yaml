@@ -1,0 +1,12 @@
+LLAMA_STACK_URL: "http://llamastack-server-genaiops-playground.apps.dev.rhoai.rh-aiservices-bu.com"
+summarize:
+  enabled: true
+  model: llama32-full
+  prompt: |
+    Give me a good summary of the following text.
+
+
+
+
+
+
