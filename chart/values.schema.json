@@ -65,6 +65,16 @@
           "type": "string",
           "description": "System prompt for information search requests",
           "minLength": 1
+        },
+        "chart_path": {
+          "type": "string",
+          "description": "Target namespace for deployment (format: userX-environment)",
+          "examples": []
+        },
+        "repo_url": {
+          "type": "string",
+          "description": "Repository URL for the Helm chart",
+          "examples": []
         }
       },
       "required": ["enabled", "model", "prompt"],
