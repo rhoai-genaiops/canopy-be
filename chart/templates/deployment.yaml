@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: canopy-backend
+      annotations:
+        configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
         - name: canopy-backend
