@@ -1,11 +1,6 @@
-LLAMA_STACK_URL: "http://llama-stack"
+LLAMA_STACK_URL: "http://llama-stack-service:8321"
 summarize:
   enabled: true
   model: llama32
   prompt: |
     Give me a good summary of the following text.
-information-search:
-  enabled: false
-  model: llama32
-  prompt: |
-    You are a helpful assistant specializing in document intelligence and academic content analysis.
