@@ -38,6 +38,14 @@
           "description": "Prompt template for summarization requests",
           "minLength": 1
         }
+      },"max_tokens": {
+          "type": "string",
+          "description": "Max tokens for the model"
+        }
+      },"temperature": {
+          "type": "string",
+          "description": "Temperature for the model"
+        }
       },
       "required": ["enabled", "model", "prompt"],
       "additionalProperties": false

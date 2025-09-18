@@ -1,6 +1,0 @@
-LLAMA_STACK_URL: "http://llama-stack"
-summarize:
-  enabled: true
-  model: llama32
-  prompt: |
-    Give me a good summary of the following text.
