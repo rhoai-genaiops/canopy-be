@@ -37,20 +37,66 @@
           "type": "string",
           "description": "Prompt template for summarization requests",
           "minLength": 1
-        }
-      },"max_tokens": {
+        },
+        "max_tokens": {
           "type": "string",
           "description": "Max tokens for the model"
-        }
-      },"temperature": {
+        },
+        "temperature": {
           "type": "string",
           "description": "Temperature for the model"
         }
       },
       "required": ["enabled", "model", "prompt"],
       "additionalProperties": false
+    },
+    "information-search": {
+      "type": "object",
+      "description": "Configuration for information search functionality",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable information search functionality",
+          "default": false
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier to use for information search",
+          "minLength": 1,
+          "examples": [
+            "llama32",
+            "llama3.2",
+            "gpt-4"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "System prompt for information search requests",
+          "minLength": 1
+        },
+        "max_tokens": {
+          "type": "string",
+          "description": "Max tokens for the model"
+        },
+        "temperature": {
+          "type": "string",
+          "description": "Temperature for the model"
+        },
+        "chart_path": {
+          "type": "string",
+          "description": "Target namespace for deployment (format: userX-environment)",
+          "examples": []
+        },
+        "repo_url": {
+          "type": "string",
+          "description": "Repository URL for the Helm chart",
+          "examples": []
+        }
+      },
+      "required": ["enabled", "model", "prompt"],
+      "additionalProperties": false
     }
   },
-  "required": ["LLAMA_STACK_URL", "summarize"],
+  "required": ["LLAMA_STACK_URL"],
   "additionalProperties": false
 }
