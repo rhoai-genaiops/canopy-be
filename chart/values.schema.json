@@ -39,11 +39,11 @@
           "minLength": 1
         },
         "max_tokens": {
-          "type": "string",
+          "type": "number",
           "description": "Max tokens for the model"
         },
         "temperature": {
-          "type": "string",
+          "type": "number",
           "description": "Temperature for the model"
         }
       },
@@ -75,11 +75,11 @@
           "minLength": 1
         },
         "max_tokens": {
-          "type": "string",
+          "type": "number",
           "description": "Max tokens for the model"
         },
         "temperature": {
-          "type": "string",
+          "type": "number",
           "description": "Temperature for the model"
         },
         "chart_path": {
