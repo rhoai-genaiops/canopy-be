@@ -29,8 +29,7 @@
           "minLength": 1,
           "examples": [
             "llama32",
-            "llama3.2",
-            "gpt-4"
+            "llama3.2"          
           ]
         },
         "prompt": {
