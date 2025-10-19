@@ -86,10 +86,11 @@ async def information_search(request: PromptRequest):
     sys_prompt = config["information-search"]["prompt"]
     temperature = config["information-search"].get("temperature", 0.7)
     max_tokens = config["information-search"].get("max_tokens", 4096)
+    vector_db_id = config["information-search"].get("vector_db_id", "latest")
 
     q = queue.Queue()
 
-    vector_db_id = "docling_vector_db_genaiops" # Hardcoded as we always will use this collection for this usecase
+    # vector_db_id = "docling_vector_db_genaiops" # Hardcoded as we always will use this collection for this usecase
     rag_response = llama_client.tool_runtime.rag_tool.query(
         content=request.prompt,                               # User's question
         vector_db_ids=[vector_db_id],               # Document intelligence database
