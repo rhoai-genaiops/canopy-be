@@ -73,6 +73,16 @@
           "description": "System prompt for information search requests",
           "minLength": 1
         },
+        "vector_db_id": {
+          "type": "string",
+          "description": "Vector database identifier to use for information search",
+          "minLength": 1,
+          "examples": [
+            "latest",
+            "v1.0",
+            "production"
+          ]
+        },
         "max_tokens": {
           "type": "number",
           "description": "Max tokens for the model"
