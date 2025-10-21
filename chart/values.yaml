@@ -1,4 +1,13 @@
 LLAMA_STACK_URL: "http://llama-stack-service:8321"
+shields:
+ enabled: false
+ # Available shields: regex, hap, prompt_injection, language_detection
+ input_shields:
+   - prompt_injection
+   - language_detection
+ output_shields:
+   - hap
+   - regex
 summarize:
  enabled: false
  model: llama32

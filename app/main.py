@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from llama_stack_client import LlamaStackClient
-import os
 import asyncio
 from fastapi.responses import StreamingResponse
 import json
@@ -12,7 +11,8 @@ import yaml
 
 app = FastAPI(title="Canopy Backend API")
 
-config_path = "/canopy/canopy-config.yaml"
+# config_path = "/canopy/canopy-config.yaml"
+config_path = "/Users/ckavili/RedHat/Tech/AI500/GenAIOps/canopy-be/app/canopy-config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 
@@ -23,6 +23,11 @@ FEATURE_FLAGS = {
     "information-search": "information-search" in config and config["information-search"]["enabled"] == True,
     "summarize": "summarize" in config and config["summarize"]["enabled"] == True,
 }
+
+# Shield configuration
+SHIELDS_ENABLED = config.get("shields", {}).get("enabled", False)
+INPUT_SHIELDS = config.get("shields", {}).get("input_shields", [])
+OUTPUT_SHIELDS = config.get("shields", {}).get("output_shields", [])
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -47,19 +52,82 @@ async def summarize(request: PromptRequest):
     def worker():
         print(f"sending requestion to model {config['summarize']['model']}")
         try:
-            response = llama_client.inference.chat_completion(
-                model_id=config["summarize"]["model"],
-                messages=[
-                    {"role": "system", "content": sys_prompt},
-                    {"role": "user", "content": request.prompt},
-                ],
-                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
-                stream=True,
-            )
-            for r in response:
-                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
-                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
-                    q.put(chunk)
+            if SHIELDS_ENABLED:
+                # Use agents API when shields are enabled
+                agent_config = {
+                    "model": config["summarize"]["model"],
+                    "instructions": sys_prompt,
+                    "sampling_params": {"max_tokens": max_tokens, "temperature": temperature},
+                }
+                if INPUT_SHIELDS:
+                    agent_config["input_shields"] = INPUT_SHIELDS
+                if OUTPUT_SHIELDS:
+                    agent_config["output_shields"] = OUTPUT_SHIELDS
+
+                # Create agent
+                agent_response = llama_client.agents.create(agent_config=agent_config)
+                agent_id = agent_response.agent_id
+
+                # Create session
+                session_response = llama_client.agents.session.create(
+                    agent_id=agent_id,
+                    session_name="summarize_session"
+                )
+                session_id = session_response.session_id
+
+                # Send turn with streaming
+                response = llama_client.agents.turn.create(
+                    agent_id=agent_id,
+                    session_id=session_id,
+                    messages=[{"role": "user", "content": request.prompt}],
+                    stream=True,
+                )
+
+                for r in response:
+                    # Extract text from agents API streaming response
+                    text_content = None
+                    error_content = None
+
+                    # Agents API uses event.payload.delta.text for step_progress events
+                    if hasattr(r, 'event') and hasattr(r.event, 'payload'):
+                        payload = r.event.payload
+
+                        # Check for step_progress event with delta (normal streaming)
+                        if hasattr(payload, 'event_type') and payload.event_type == 'step_progress':
+                            if hasattr(payload, 'delta') and hasattr(payload.delta, 'text'):
+                                text_content = payload.delta.text
+
+                        # Check for shield violations (step_complete with violation)
+                        elif hasattr(payload, 'event_type') and payload.event_type == 'step_complete':
+                            if hasattr(payload, 'step_details'):
+                                step_details = payload.step_details
+                                if hasattr(step_details, 'step_type') and step_details.step_type == 'shield_call':
+                                    if hasattr(step_details, 'violation') and step_details.violation is not None:
+                                        # User-friendly error message
+                                        error_content = "I'm sorry, but I can't help with that request. Please try asking something else."
+
+                    if text_content:
+                        chunk = f"data: {json.dumps({'delta': text_content})}\n\n"
+                        q.put(chunk)
+                    elif error_content:
+                        chunk = f"data: {json.dumps({'error': error_content})}\n\n"
+                        q.put(chunk)
+                        break  # Stop processing after a violation
+            else:
+                # Use inference API when shields are disabled
+                response = llama_client.inference.chat_completion(
+                    model_id=config["summarize"]["model"],
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": request.prompt},
+                    ],
+                    sampling_params={"max_tokens": max_tokens, "temperature": temperature},
+                    stream=True,
+                )
+                for r in response:
+                    if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
+                        chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                        q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
         finally:
@@ -112,19 +180,82 @@ async def information_search(request: PromptRequest):
 
     def worker():
         try:
-            response = llama_client.inference.chat_completion(
-                model_id=config["information-search"]["model"],
-                messages=[
-                    {"role": "system", "content": sys_prompt},
-                    {"role": "user", "content": enhaned_prompt},
-                ],
-                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
-                stream=True,
-            )
-            for r in response:
-                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
-                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
-                    q.put(chunk)
+            if SHIELDS_ENABLED:
+                # Use agents API when shields are enabled
+                agent_config = {
+                    "model": config["information-search"]["model"],
+                    "instructions": sys_prompt,
+                    "sampling_params": {"max_tokens": max_tokens, "temperature": temperature},
+                }
+                if INPUT_SHIELDS:
+                    agent_config["input_shields"] = INPUT_SHIELDS
+                if OUTPUT_SHIELDS:
+                    agent_config["output_shields"] = OUTPUT_SHIELDS
+
+                # Create agent
+                agent_response = llama_client.agents.create(agent_config=agent_config)
+                agent_id = agent_response.agent_id
+
+                # Create session
+                session_response = llama_client.agents.session.create(
+                    agent_id=agent_id,
+                    session_name="information_search_session"
+                )
+                session_id = session_response.session_id
+
+                # Send turn with streaming
+                response = llama_client.agents.turn.create(
+                    agent_id=agent_id,
+                    session_id=session_id,
+                    messages=[{"role": "user", "content": enhaned_prompt}],
+                    stream=True,
+                )
+
+                for r in response:
+                    # Extract text from agents API streaming response
+                    text_content = None
+                    error_content = None
+
+                    # Agents API uses event.payload.delta.text for step_progress events
+                    if hasattr(r, 'event') and hasattr(r.event, 'payload'):
+                        payload = r.event.payload
+
+                        # Check for step_progress event with delta (normal streaming)
+                        if hasattr(payload, 'event_type') and payload.event_type == 'step_progress':
+                            if hasattr(payload, 'delta') and hasattr(payload.delta, 'text'):
+                                text_content = payload.delta.text
+
+                        # Check for shield violations (step_complete with violation)
+                        elif hasattr(payload, 'event_type') and payload.event_type == 'step_complete':
+                            if hasattr(payload, 'step_details'):
+                                step_details = payload.step_details
+                                if hasattr(step_details, 'step_type') and step_details.step_type == 'shield_call':
+                                    if hasattr(step_details, 'violation') and step_details.violation is not None:
+                                        # User-friendly error message
+                                        error_content = "I'm sorry, but I can't help with that request. Please try asking something else."
+
+                    if text_content:
+                        chunk = f"data: {json.dumps({'delta': text_content})}\n\n"
+                        q.put(chunk)
+                    elif error_content:
+                        chunk = f"data: {json.dumps({'error': error_content})}\n\n"
+                        q.put(chunk)
+                        break  # Stop processing after a violation
+            else:
+                # Use inference API when shields are disabled
+                response = llama_client.inference.chat_completion(
+                    model_id=config["information-search"]["model"],
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": enhaned_prompt},
+                    ],
+                    sampling_params={"max_tokens": max_tokens, "temperature": temperature},
+                    stream=True,
+                )
+                for r in response:
+                    if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
+                        chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                        q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
         finally:

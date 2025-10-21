@@ -14,6 +14,47 @@
         "https://my-llama-service.example.com"
       ]
     },
+    "shields": {
+      "type": "object",
+      "description": "Configuration for safety shields applied to model inputs and outputs",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable safety shields globally",
+          "default": false
+        },
+        "input_shields": {
+          "type": "array",
+          "description": "List of shields to apply to user inputs before model processing",
+          "items": {
+            "type": "string",
+            "enum": ["regex", "hap", "prompt_injection", "language_detection"],
+            "description": "Shield identifier from LLaMA Stack configuration"
+          },
+          "uniqueItems": true,
+          "examples": [
+            ["prompt_injection", "language_detection"],
+            ["regex", "hap", "prompt_injection"]
+          ]
+        },
+        "output_shields": {
+          "type": "array",
+          "description": "List of shields to apply to model outputs before sending to users",
+          "items": {
+            "type": "string",
+            "enum": ["regex", "hap", "prompt_injection", "language_detection"],
+            "description": "Shield identifier from LLaMA Stack configuration"
+          },
+          "uniqueItems": true,
+          "examples": [
+            ["hap", "regex"],
+            ["hap"]
+          ]
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
     "summarize": {
       "type": "object",
       "description": "Configuration for summarization functionality",
