@@ -46,19 +46,22 @@ async def summarize(request: PromptRequest):
 
     def worker():
         print(f"sending requestion to model {config['summarize']['model']}")
+        print("3.0")
         try:
-            response = llama_client.inference.chat_completion(
-                model_id=config["summarize"]["model"],
+            response = llama_client.chat.completions.create(
+                model=config["summarize"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": request.prompt},
                 ],
-                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
+                max_tokens=max_tokens, 
+                temperature=temperature,
                 stream=True,
             )
             for r in response:
-                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
-                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                if hasattr(r, 'choices') and r.choices:
+                    delta = r.choices[0].delta
+                    chunk = f"data: {json.dumps({'delta': delta.content})}\n\n"
                     q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
