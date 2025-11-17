@@ -500,8 +500,8 @@ def batch_docling_processing_component(
 # =============================================================================
 
 @component(
-    base_image='python:3.11',
-    packages_to_install=['llama_stack_client', 'fire', 'requests']
+    base_image='python:3.12',
+    packages_to_install=['llama_stack_client==0.3.0', 'fire', 'requests']
 )
 def vector_database_component(
     setup_config: Dict[str, Any]
@@ -560,42 +560,43 @@ def vector_database_component(
             print(f"Warning: Could not list existing vector databases: {list_error}")
 
         # Register the vector database with enhanced configuration for document intelligence
-        print(f"Attempting to register vector database '{vector_db_id}'...")
-        client.vector_dbs.register(
-            vector_db_id=vector_db_id,
-            embedding_model=doc_intel_config["embedding_model"],
-            embedding_dimension=doc_intel_config["embedding_dimension"],
-            provider_id=doc_intel_config["vector_provider"], # Milvus backend
+        vs = client.vector_stores.create(
+            name=vector_db_id,
+            extra_body={
+                "embedding_model": "all-MiniLM-L6-v2",
+                "embedding_dimension": 384,
+                "provider_id": "milvus"
+            }
         )
 
-        print("Vector database registered successfully!")
+        print(f"Vector database registered successfully with id {vs.id}!")
 
         # Track all created database IDs
-        created_db_ids = [vector_db_id]
+        created_db_ids = [vs.id]
 
         # Create additional vector database with alias name if provided
         # This creates a completely separate database (not an alias)
-        if vector_db_alias:
-            print(f"\nCreating additional vector database '{vector_db_alias}'...")
-            print(f"Note: This creates a separate database, not an alias")
-            try:
-                client.vector_dbs.register(
-                    vector_db_id=vector_db_alias,
-                    embedding_model=doc_intel_config["embedding_model"],
-                    embedding_dimension=doc_intel_config["embedding_dimension"],
-                    provider_id=doc_intel_config["vector_provider"], # Milvus backend
-                )
-                print(f"Additional database '{vector_db_alias}' registered successfully!")
-                created_db_ids.append(vector_db_alias)
-                print(f"Documents will be ingested into BOTH databases")
-            except Exception as alias_error:
-                print(f"Warning: Failed to register additional database '{vector_db_alias}': {alias_error}")
-                print("Continuing with main vector database only...")
+        # if vector_db_alias:
+        #     print(f"\nCreating additional vector database '{vector_db_alias}'...")
+        #     print(f"Note: This creates a separate database, not an alias")
+        #     try:
+        #         client.vector_dbs.register(
+        #             vector_db_id=vector_db_alias,
+        #             embedding_model=doc_intel_config["embedding_model"],
+        #             embedding_dimension=doc_intel_config["embedding_dimension"],
+        #             provider_id=doc_intel_config["vector_provider"], # Milvus backend
+        #         )
+        #         print(f"Additional database '{vector_db_alias}' registered successfully!")
+        #         created_db_ids.append(vector_db_alias)
+        #         print(f"Documents will be ingested into BOTH databases")
+        #     except Exception as alias_error:
+        #         print(f"Warning: Failed to register additional database '{vector_db_alias}': {alias_error}")
+        #         print("Continuing with main vector database only...")
 
         # Prepare status response
         vector_db_status = {
             "status": "success",
-            "vector_db_id": vector_db_id,
+            "vector_db_id": vs.id,
             "embedding_model": doc_intel_config["embedding_model"],
             "embedding_dimension": doc_intel_config["embedding_dimension"],
             "provider": doc_intel_config["vector_provider"],
@@ -637,8 +638,8 @@ def vector_database_component(
 # =============================================================================
 
 @component(
-    base_image='python:3.11',
-    packages_to_install=['llama_stack_client', 'fire', 'requests']
+    base_image='python:3.12',
+    packages_to_install=['llama_stack_client==0.3.0', 'fire', 'requests']
 )
 def batch_document_ingestion_component(
     setup_config: Dict[str, Any],
