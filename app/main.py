@@ -47,18 +47,20 @@ async def summarize(request: PromptRequest):
     def worker():
         print(f"sending requestion to model {config['summarize']['model']}")
         try:
-            response = llama_client.inference.chat_completion(
-                model_id=config["summarize"]["model"],
+            response = llama_client.chat.completions.create(
+                model=config["summarize"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": request.prompt},
                 ],
-                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
+                max_tokens=max_tokens, 
+                temperature=temperature,
                 stream=True,
             )
             for r in response:
-                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
-                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                if hasattr(r, 'choices') and r.choices:
+                    delta = r.choices[0].delta
+                    chunk = f"data: {json.dumps({'delta': delta.content})}\n\n"
                     q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
@@ -90,15 +92,22 @@ async def information_search(request: PromptRequest):
 
     q = queue.Queue()
 
-    # vector_db_id = "docling_vector_db_genaiops" # Hardcoded as we always will use this collection for this usecase
-    rag_response = llama_client.tool_runtime.rag_tool.query(
-        content=request.prompt,                               # User's question
-        vector_db_ids=[vector_db_id],               # Document intelligence database
-        query_config={                              # Format retrieved results
-            "chunk_template": "Result {index}\\nContent: {chunk.content}\\nMetadata: {metadata}\\n",
-        },
+    print(f"Searching in collection {vector_db_id}")
+    print(f"Existing collections: {llama_client.vector_stores.list()}")
+    print(f"query: {request.prompt}")
+
+    search_results = llama_client.vector_stores.search(
+        vector_store_id=vector_db_id,
+        query=request.prompt,
+        max_num_results=5,
+        search_mode="vector"
     )
-    prompt_context = rag_response.content
+    retrieved_chunks = []
+    for i, result in enumerate(search_results.data):
+        chunk_content = result.content[0].text if hasattr(result, 'content') else str(result)
+        retrieved_chunks.append(chunk_content)
+
+    prompt_context = "\n\n".join(retrieved_chunks)
 
     enhaned_prompt = f"""Please answer the given query using the document intelligence context below.
 
@@ -111,19 +120,22 @@ async def information_search(request: PromptRequest):
     Note: The context includes intelligently processed content with preserved tables, formulas, figures, and document structure."""
 
     def worker():
+        print(f"sending requestion to model {config['summarize']['model']}")
         try:
-            response = llama_client.inference.chat_completion(
-                model_id=config["information-search"]["model"],
+            response = llama_client.chat.completions.create(
+                model=config["summarize"]["model"],
                 messages=[
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": enhaned_prompt},
                 ],
-                sampling_params={"max_tokens": max_tokens, "temperature": temperature},
+                max_tokens=max_tokens, 
+                temperature=temperature,
                 stream=True,
             )
             for r in response:
-                if hasattr(r.event, 'delta') and hasattr(r.event.delta, 'text'):
-                    chunk = f"data: {json.dumps({'delta': r.event.delta.text})}\n\n"
+                if hasattr(r, 'choices') and r.choices:
+                    delta = r.choices[0].delta
+                    chunk = f"data: {json.dumps({'delta': delta.content})}\n\n"
                     q.put(chunk)
         except Exception as e:
             q.put(f"data: {json.dumps({'error': str(e)})}\n\n")
