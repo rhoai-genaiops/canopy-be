@@ -563,9 +563,10 @@ def vector_database_component(
         vs = client.vector_stores.create(
             name=vector_db_id,
             extra_body={
-                "embedding_model": "all-MiniLM-L6-v2",
-                "embedding_dimension": 384,
-                "provider_id": "milvus"
+                "embedding_model": doc_intel_config["embedding_model"],
+                "embedding_dimension": doc_intel_config["embedding_dimension"],
+                "provider_id": doc_intel_config["vector_provider"],
+                "vector_db_id": vector_db_id
             }
         )
 
@@ -576,22 +577,25 @@ def vector_database_component(
 
         # Create additional vector database with alias name if provided
         # This creates a completely separate database (not an alias)
-        # if vector_db_alias:
-        #     print(f"\nCreating additional vector database '{vector_db_alias}'...")
-        #     print(f"Note: This creates a separate database, not an alias")
-        #     try:
-        #         client.vector_dbs.register(
-        #             vector_db_id=vector_db_alias,
-        #             embedding_model=doc_intel_config["embedding_model"],
-        #             embedding_dimension=doc_intel_config["embedding_dimension"],
-        #             provider_id=doc_intel_config["vector_provider"], # Milvus backend
-        #         )
-        #         print(f"Additional database '{vector_db_alias}' registered successfully!")
-        #         created_db_ids.append(vector_db_alias)
-        #         print(f"Documents will be ingested into BOTH databases")
-        #     except Exception as alias_error:
-        #         print(f"Warning: Failed to register additional database '{vector_db_alias}': {alias_error}")
-        #         print("Continuing with main vector database only...")
+        if vector_db_alias:
+            print(f"\nCreating additional vector database '{vector_db_alias}'...")
+            print(f"Note: This creates a separate database, not an alias")
+            try:
+                client.vector_stores.create(
+                    name=vector_db_alias,
+                    extra_body={
+                        "embedding_model": doc_intel_config["embedding_model"],
+                        "embedding_dimension": doc_intel_config["embedding_dimension"],
+                        "provider_id": doc_intel_config["vector_provider"],
+                        "vector_db_id": vector_db_alias
+                    }
+                )
+                print(f"Additional database '{vector_db_alias}' registered successfully!")
+                created_db_ids.append(vector_db_alias)
+                print(f"Documents will be ingested into BOTH databases")
+            except Exception as alias_error:
+                print(f"Warning: Failed to register additional database '{vector_db_alias}': {alias_error}")
+                print("Continuing with main vector database only...")
 
         # Prepare status response
         vector_db_status = {
